@@ -10,11 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AniversariosRouteImport } from './routes/aniversarios'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as DizimistasRouteImport } from './routes/dizimistas'
+import { Route as FinanceiroRouteImport } from './routes/financeiro'
+import { Route as MembrosRouteImport } from './routes/membros'
+import { Route as PainelRouteImport } from './routes/painel'
+import { Route as VisitantesRouteImport } from './routes/visitantes'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AniversariosRoute = AniversariosRouteImport.update({
+  id: '/aniversarios',
+  path: '/aniversarios',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -22,31 +33,105 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DizimistasRoute = DizimistasRouteImport.update({
+  id: '/dizimistas',
+  path: '/dizimistas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FinanceiroRoute = FinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MembrosRoute = MembrosRouteImport.update({
+  id: '/membros',
+  path: '/membros',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PainelRoute = PainelRouteImport.update({
+  id: '/painel',
+  path: '/painel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VisitantesRoute = VisitantesRouteImport.update({
+  id: '/visitantes',
+  path: '/visitantes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/aniversarios': typeof AniversariosRoute
   '/auth': typeof AuthRoute
+  '/dizimistas': typeof DizimistasRoute
+  '/financeiro': typeof FinanceiroRoute
+  '/membros': typeof MembrosRoute
+  '/painel': typeof PainelRoute
+  '/visitantes': typeof VisitantesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/aniversarios': typeof AniversariosRoute
   '/auth': typeof AuthRoute
+  '/dizimistas': typeof DizimistasRoute
+  '/financeiro': typeof FinanceiroRoute
+  '/membros': typeof MembrosRoute
+  '/painel': typeof PainelRoute
+  '/visitantes': typeof VisitantesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/aniversarios': typeof AniversariosRoute
   '/auth': typeof AuthRoute
+  '/dizimistas': typeof DizimistasRoute
+  '/financeiro': typeof FinanceiroRoute
+  '/membros': typeof MembrosRoute
+  '/painel': typeof PainelRoute
+  '/visitantes': typeof VisitantesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth'
+  fullPaths:
+    | '/'
+    | '/aniversarios'
+    | '/auth'
+    | '/dizimistas'
+    | '/financeiro'
+    | '/membros'
+    | '/painel'
+    | '/visitantes'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth'
-  id: '__root__' | '/' | '/auth'
+  to:
+    | '/'
+    | '/aniversarios'
+    | '/auth'
+    | '/dizimistas'
+    | '/financeiro'
+    | '/membros'
+    | '/painel'
+    | '/visitantes'
+  id:
+    | '__root__'
+    | '/'
+    | '/aniversarios'
+    | '/auth'
+    | '/dizimistas'
+    | '/financeiro'
+    | '/membros'
+    | '/painel'
+    | '/visitantes'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AniversariosRoute: typeof AniversariosRoute
   AuthRoute: typeof AuthRoute
+  DizimistasRoute: typeof DizimistasRoute
+  FinanceiroRoute: typeof FinanceiroRoute
+  MembrosRoute: typeof MembrosRoute
+  PainelRoute: typeof PainelRoute
+  VisitantesRoute: typeof VisitantesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,6 +143,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/aniversarios': {
+      id: '/aniversarios'
+      path: '/aniversarios'
+      fullPath: '/aniversarios'
+      preLoaderRoute: typeof AniversariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -65,12 +157,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dizimistas': {
+      id: '/dizimistas'
+      path: '/dizimistas'
+      fullPath: '/dizimistas'
+      preLoaderRoute: typeof DizimistasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/financeiro': {
+      id: '/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof FinanceiroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/membros': {
+      id: '/membros'
+      path: '/membros'
+      fullPath: '/membros'
+      preLoaderRoute: typeof MembrosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/painel': {
+      id: '/painel'
+      path: '/painel'
+      fullPath: '/painel'
+      preLoaderRoute: typeof PainelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/visitantes': {
+      id: '/visitantes'
+      path: '/visitantes'
+      fullPath: '/visitantes'
+      preLoaderRoute: typeof VisitantesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AniversariosRoute: AniversariosRoute,
   AuthRoute: AuthRoute,
+  DizimistasRoute: DizimistasRoute,
+  FinanceiroRoute: FinanceiroRoute,
+  MembrosRoute: MembrosRoute,
+  PainelRoute: PainelRoute,
+  VisitantesRoute: VisitantesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

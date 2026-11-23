@@ -24,6 +24,7 @@ type Entry = {
 type MemberOption = { id: string; full_name: string };
 type EntryForm = { entry_type: Entry["entry_type"]; amount: string; entry_date: string; payment_method: Entry["payment_method"]; member_id: string; notes: string };
 const blank: EntryForm = { entry_type: "dizimo", amount: "", entry_date: new Date().toLocaleDateString("en-CA"), payment_method: "pix", member_id: "", notes: "" };
+const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const paymentLabels = { pix: "Pix", dinheiro: "Dinheiro", transferencia: "Transferência", outro: "Outro" };
 
 function brl(cents: number) {

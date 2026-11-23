@@ -28,3 +28,6 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- Pages are top-level route files (`src/routes/painel.tsx`, etc.) that each check the session and role themselves; do not add a parallel `_authenticated/` tree, because duplicate or childless layouts collide on the same URL and break the build.
