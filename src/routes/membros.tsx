@@ -158,28 +158,30 @@ function MembersPage() {
       status: form.status,
       notes: form.notes.trim() || null,
     };
-    const result = editingId
-      ? await supabase.from("members").update(payload).eq("id", editingId)
-      : await supabase.from("members").insert(payload);
-    if (result.error) {
-      toast.error("Não foi possível salvar o cadastro. " + result.error.message);
-      setSaving(false);
-      return;
+    let memberId = editingId;
+    if (editingId) {
+      const { error: updateError } = await supabase.from("members").update(payload).eq("id", editingId);
+      if (updateError) {
+        toast.error("Não foi possível salvar o cadastro. " + updateError.message);
+        setSaving(false);
+        return;
+      }
+    } else {
+      const { data: inserted, error: insertError } = await supabase.from("members").insert(payload).select("id").single();
+      if (insertError || !inserted) {
+        toast.error("Não foi possível salvar o cadastro. " + (insertError?.message ?? ""));
+        setSaving(false);
+        return;
+      }
+      memberId = inserted.id;
     }
 
-    if (role === "admin") {
-      let memberId = editingId;
-      if (!memberId) {
-        const { data: inserted } = await supabase.from("members").select("id").eq("full_name", payload.full_name).order("created_at", { ascending: false }).limit(1).maybeSingle();
-        memberId = inserted?.id ?? null;
-      }
-      if (memberId) {
-        const { error: titherError } = await supabase.from("member_tithers").upsert({
-          member_id: memberId,
-          is_tither: form.is_tither,
-        }, { onConflict: "member_id" });
-        if (titherError) toast.error("Cadastro salvo, mas não foi possível atualizar a marcação de dizimista.");
-      }
+    if (role === "admin" && memberId) {
+      const { error: titherError } = await supabase.from("member_tithers").upsert({
+        member_id: memberId,
+        is_tither: form.is_tither,
+      }, { onConflict: "member_id" });
+      if (titherError) toast.error("Cadastro salvo, mas não foi possível atualizar a marcação de dizimista.");
     }
 
     toast.success(editingId ? "Cadastro atualizado." : "Membro cadastrado.");
