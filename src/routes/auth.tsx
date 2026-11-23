@@ -46,17 +46,48 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isRecovery, setIsRecovery] = useState(false);
 
   useEffect(() => {
-    void supabase.auth.getSession().then(({ data }) => {
-      if (data.session) void navigate({ to: redirect ?? "/painel", replace: true });
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") setIsRecovery(true);
     });
-  }, [navigate, redirect]);
+
+    void supabase.auth.getSession().then(({ data }) => {
+      if (data.session && !isRecovery) void navigate({ to: redirect ?? "/painel", replace: true });
+    });
+
+    return () => authListener.subscription.unsubscribe();
+  }, [navigate, redirect, isRecovery]);
+
+  async function onForgotPassword() {
+    setError(null);
+    setNotice(null);
+    const parsedEmail = z.string().trim().email("Informe um e-mail válido").safeParse(email);
+    if (!parsedEmail.success) {
+      setError("Digite seu e-mail para receber o link de redefinição.");
+      return;
+    }
+
+    setLoading(true);
+    const { error: recoveryError } = await supabase.auth.resetPasswordForEmail(parsedEmail.data, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+    setLoading(false);
+
+    if (recoveryError) {
+      setError("Não foi possível enviar o link. Confira o e-mail e tente novamente.");
+      return;
+    }
+    setNotice("Se esse e-mail estiver cadastrado, você receberá um link para redefinir sua senha.");
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setNotice(null);
     const parsed = schema.safeParse({ email, password });
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Dados inválidos");
@@ -64,6 +95,21 @@ function AuthPage() {
     }
     setLoading(true);
     try {
+      if (isRecovery) {
+        const { error: updateError } = await supabase.auth.updateUser({ password: parsed.data.password });
+        if (updateError) {
+          setError("Não foi possível atualizar a senha. Solicite um novo link de redefinição.");
+          setLoading(false);
+          return;
+        }
+        await supabase.auth.signOut();
+        setIsRecovery(false);
+        setPassword("");
+        setNotice("Senha atualizada. Agora entre com seu e-mail e a nova senha.");
+        setLoading(false);
+        return;
+      }
+
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword(parsed.data);
       if (signInError || !signInData.user) {
         const message = signInError?.message.toLowerCase() ?? "";
@@ -128,7 +174,7 @@ function AuthPage() {
             <div className="mb-9">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#c9aa70]">Acesso restrito</p>
               <h1 className="mt-3 font-display text-3xl font-semibold text-white sm:text-4xl">Bem-vindo(a)</h1>
-              <p className="mt-3 text-sm leading-6 text-white/55">Entre com seu e-mail e senha para acessar o sistema administrativo.</p>
+              <p className="mt-3 text-sm leading-6 text-white/55">{isRecovery ? "Cadastre uma nova senha para sua conta administrativa." : "Entre com seu e-mail e senha para acessar o sistema administrativo."}</p>
             </div>
             <form onSubmit={onSubmit} className="space-y-5" noValidate>
               <div className="space-y-2">
@@ -136,14 +182,16 @@ function AuthPage() {
                 <Input id="email" type="email" autoComplete="email" inputMode="email" placeholder="seuemail@exemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 border-white/15 bg-white/[0.04] text-white placeholder:text-white/30 focus-visible:ring-[#c9aa70]" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm text-white/80">Senha</Label>
+                <Label htmlFor="password" className="text-sm text-white/80">{isRecovery ? "Nova senha" : "Senha"}</Label>
                 <Input id="password" type="password" autoComplete="current-password" placeholder="Digite sua senha" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 border-white/15 bg-white/[0.04] text-white placeholder:text-white/30 focus-visible:ring-[#c9aa70]" />
               </div>
               {error ? <p role="alert" className="rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-2.5 text-sm text-red-200">{error}</p> : null}
+              {notice ? <p role="status" className="rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-2.5 text-sm text-emerald-200">{notice}</p> : null}
               <Button type="submit" size="xl" className="h-12 w-full bg-[#c5a365] font-semibold text-[#17130c] shadow-[0_8px_24px_rgba(197,163,101,0.16)] transition hover:bg-[#d7b879]" disabled={loading}>
                 {loading ? <Loader2 className="animate-spin" /> : <LockKeyhole />}
-                {loading ? "Entrando..." : "Acessar o sistema"}
+                {loading ? "Aguarde..." : isRecovery ? "Salvar nova senha" : "Acessar o sistema"}
               </Button>
+              {!isRecovery ? <button type="button" onClick={onForgotPassword} disabled={loading} className="w-full text-center text-sm text-[#d5b574] transition hover:text-[#f4ead5] disabled:opacity-50">Esqueci minha senha</button> : null}
             </form>
             <div className="mt-8 border-t border-white/10 pt-5"><p className="text-center text-xs leading-5 text-white/40">Sistema administrativo do Ministério Aliança Renascendo em Cristo.<br />Não há cadastro público. Solicite acesso à administração.</p></div>
           </div>
