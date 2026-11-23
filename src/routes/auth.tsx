@@ -63,18 +63,47 @@ function AuthPage() {
       return;
     }
     setLoading(true);
-    const { error: err } = await supabase.auth.signInWithPassword(parsed.data);
-    if (err) {
+    try {
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword(parsed.data);
+      if (signInError || !signInData.user) {
+        const message = signInError?.message.toLowerCase() ?? "";
+        setError(
+          message.includes("invalid login credentials") || message.includes("invalid")
+            ? "E-mail ou senha não conferem. Confira os dados ou redefina sua senha."
+            : message.includes("email not confirmed")
+              ? "Este e-mail ainda não foi confirmado. Verifique sua caixa de entrada."
+              : "Não foi possível autenticar. Verifique a conexão e tente novamente.",
+        );
+        setLoading(false);
+        return;
+      }
+
+      const { data: roles, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", signInData.user.id);
+
+      if (roleError) {
+        await supabase.auth.signOut();
+        setError("Sua conta foi autenticada, mas não foi possível consultar suas permissões. A administração precisa verificar a tabela de perfis no Supabase.");
+        setLoading(false);
+        return;
+      }
+
+      const hasAccess = roles?.some((item) => item.role === "admin" || item.role === "secretaria");
+      if (!hasAccess) {
+        await supabase.auth.signOut();
+        setError("Sua conta existe, mas ainda não tem perfil de acesso ao sistema. Configure o perfil Administrador no Supabase e tente novamente.");
+        setLoading(false);
+        return;
+      }
+
+      queryClient.removeQueries({ queryKey: ["auth", "me"] });
+      await navigate({ to: redirect ?? "/painel", replace: true });
+    } catch {
+      setError("Ocorreu uma falha de conexão durante o acesso. Tente novamente.");
       setLoading(false);
-      setError(
-        err.message.toLowerCase().includes("invalid")
-          ? "E-mail ou senha incorretos."
-          : "Não foi possível entrar. Tente novamente.",
-      );
-      return;
     }
-    queryClient.removeQueries({ queryKey: ["auth", "me"] });
-    await navigate({ to: redirect ?? "/painel", replace: true });
   }
 
   return (
