@@ -78,75 +78,48 @@ function AuthPage() {
   }
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
-      <div className="relative hidden flex-col justify-between overflow-hidden bg-brand-gradient p-12 text-primary-foreground lg:flex">
-        <BrandMark size="lg" />
-        <div className="max-w-md">
-          <p className="font-display text-4xl font-semibold leading-tight">
-            Ministério Aliança
-            <br />
-            Renascendo em Cristo
-          </p>
-          <p className="mt-4 text-primary-foreground/75">
-            Membros, visitantes, aniversários e finanças da igreja em um só lugar.
-          </p>
-        </div>
-        <p className="text-xs text-primary-foreground/60">Uso exclusivo da equipe administrativa.</p>
-      </div>
-
-      <div className="flex items-center justify-center px-5 py-12">
-        <div className="w-full max-w-sm">
-          <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <BrandMark />
-            <div>
-              <p className="font-display text-lg font-semibold">MARC</p>
-              <p className="text-xs text-muted-foreground">Aliança Renascendo em Cristo</p>
-            </div>
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#080808] px-4 py-8 text-white sm:px-6">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_15%_10%,rgba(184,145,73,0.16),transparent_42%),radial-gradient(ellipse_at_90%_90%,rgba(184,145,73,0.08),transparent_38%)]" />
+      <div className="relative grid w-full max-w-5xl overflow-hidden rounded-[28px] border border-[#b99a5b]/25 bg-[#101010] shadow-[0_28px_100px_rgba(0,0,0,0.6)] lg:min-h-[620px] lg:grid-cols-[1.05fr_0.95fr]">
+        <section className="relative flex flex-col justify-between overflow-hidden border-b border-[#b99a5b]/20 bg-[linear-gradient(145deg,#17130c_0%,#090909_58%,#050505_100%)] p-8 sm:p-12 lg:border-b-0 lg:border-r">
+          <div aria-hidden="true" className="absolute -right-28 -top-28 h-80 w-80 rounded-full border border-[#c6a66a]/10" />
+          <div className="relative flex items-center gap-4">
+            <BrandMark size="lg" />
+            <div><p className="font-display text-xl font-semibold tracking-[0.16em] text-[#e2c78e]">MARC</p><p className="mt-1 text-xs tracking-[0.08em] text-white/65">MINISTÉRIO ALIANÇA</p></div>
           </div>
-          <h1 className="text-3xl font-semibold">Entrar</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Use o e-mail e a senha fornecidos pelo administrador.
-          </p>
-
-          <form onSubmit={onSubmit} className="mt-8 space-y-4" noValidate>
-            <div className="space-y-1.5">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                inputMode="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-11"
-              />
+          <div className="relative py-10 lg:py-0">
+            <div className="mb-5 h-px w-16 bg-[#c5a365]" />
+            <p className="font-display text-3xl font-semibold leading-tight text-[#f4ead5] sm:text-4xl">Ministério Aliança<br /><span className="text-[#d5b574]">Renascendo em Cristo</span></p>
+            <p className="mt-5 max-w-sm text-sm leading-7 text-white/65">Um espaço de cuidado e organização para servir melhor à igreja, seus membros e visitantes.</p>
+          </div>
+          <p className="relative text-[10px] uppercase tracking-[0.2em] text-[#c7a96c]/70">Fé · Comunhão · Propósito</p>
+        </section>
+        <section className="flex items-center justify-center px-6 py-10 sm:px-12 lg:px-14">
+          <div className="w-full max-w-sm">
+            <div className="mb-9">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#c9aa70]">Acesso restrito</p>
+              <h1 className="mt-3 font-display text-3xl font-semibold text-white sm:text-4xl">Bem-vindo(a)</h1>
+              <p className="mt-3 text-sm leading-6 text-white/55">Entre com seu e-mail e senha para acessar o sistema administrativo.</p>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-11"
-              />
-            </div>
-            {error ? (
-              <p role="alert" className="rounded-md bg-destructive-soft px-3 py-2 text-sm text-destructive">
-                {error}
-              </p>
-            ) : null}
-            <Button type="submit" size="xl" className="w-full" disabled={loading}>
-              {loading ? <Loader2 className="animate-spin" /> : <LockKeyhole />}
-              Entrar
-            </Button>
-          </form>
-          <p className="mt-6 text-xs text-muted-foreground">
-            Não há cadastro público. Peça acesso ao administrador da igreja.
-          </p>
-        </div>
+            <form onSubmit={onSubmit} className="space-y-5" noValidate>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm text-white/80">E-mail</Label>
+                <Input id="email" type="email" autoComplete="email" inputMode="email" placeholder="seuemail@exemplo.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-12 border-white/15 bg-white/[0.04] text-white placeholder:text-white/30 focus-visible:ring-[#c9aa70]" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm text-white/80">Senha</Label>
+                <Input id="password" type="password" autoComplete="current-password" placeholder="Digite sua senha" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 border-white/15 bg-white/[0.04] text-white placeholder:text-white/30 focus-visible:ring-[#c9aa70]" />
+              </div>
+              {error ? <p role="alert" className="rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-2.5 text-sm text-red-200">{error}</p> : null}
+              <Button type="submit" size="xl" className="h-12 w-full bg-[#c5a365] font-semibold text-[#17130c] shadow-[0_8px_24px_rgba(197,163,101,0.16)] transition hover:bg-[#d7b879]" disabled={loading}>
+                {loading ? <Loader2 className="animate-spin" /> : <LockKeyhole />}
+                {loading ? "Entrando..." : "Acessar o sistema"}
+              </Button>
+            </form>
+            <div className="mt-8 border-t border-white/10 pt-5"><p className="text-center text-xs leading-5 text-white/40">Sistema administrativo do Ministério Aliança Renascendo em Cristo.<br />Não há cadastro público. Solicite acesso à administração.</p></div>
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
