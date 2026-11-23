@@ -77,7 +77,7 @@ function FinancePage() {
     }
 
     const firstDay = `${year}-${month}-01`;
-    const lastDay = new Date(Number(year), Number(month), 0).toISOString().slice(0, 10);
+    const lastDay = new Date(Date.UTC(Number(year), Number(month), 0)).toISOString().slice(0, 10);
     const [entryResult, memberResult] = await Promise.all([
       supabase.from("financial_entries").select("id, entry_type, amount_cents, entry_date, payment_method, member_id, notes, is_cancelled, cancelled_at").gte("entry_date", firstDay).lte("entry_date", lastDay).order("entry_date", { ascending: false }),
       supabase.from("members").select("id, full_name").eq("status", "ativo").order("full_name"),
