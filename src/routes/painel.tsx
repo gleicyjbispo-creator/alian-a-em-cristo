@@ -229,7 +229,8 @@ function DashboardPage() {
           <nav className="mt-3 space-y-1">
             <a href="/painel" className="flex items-center gap-3 rounded-xl bg-sidebar-accent px-3 py-3 text-sm font-semibold text-sidebar-accent-foreground"><Church size={18} /> Visão geral</a>
             <a href="/membros" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/80 transition hover:bg-sidebar-accent"><Users size={18} /> Membros</a>
-            <a href="/visitantes" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/80 transition hover:bg-sidebar-accent"><UserRoundPlus size={18} /> Visitantes</a>\n            {role === "admin" ? <a href="/dizimistas" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/80 transition hover:bg-sidebar-accent"><Wallet size={18} /> Dizimistas</a> : null}
+            <a href="/visitantes" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/80 transition hover:bg-sidebar-accent"><UserRoundPlus size={18} /> Visitantes</a>
+            {role === "admin" ? <a href="/dizimistas" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/80 transition hover:bg-sidebar-accent"><Wallet size={18} /> Dizimistas</a> : null}
             <a href="/aniversarios" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/80 transition hover:bg-sidebar-accent"><Cake size={18} /> Aniversários</a>
             {role === "admin" ? <a href="/financeiro" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/80 transition hover:bg-sidebar-accent"><Wallet size={18} /> Financeiro</a> : null}
           </nav>
@@ -257,7 +258,8 @@ function DashboardPage() {
             {menuOpen ? <div className="absolute right-0 top-12 z-30 w-56 rounded-xl border bg-card p-2 shadow-raised">
               <a className="block rounded-lg px-3 py-2 text-sm hover:bg-muted" href="/painel">Visão geral</a>
               <a className="block rounded-lg px-3 py-2 text-sm hover:bg-muted" href="/membros">Membros</a>
-              <a className="block rounded-lg px-3 py-2 text-sm hover:bg-muted" href="/visitantes">Visitantes</a>\n              {role === "admin" ? <a className="block rounded-lg px-3 py-2 text-sm hover:bg-muted" href="/dizimistas">Dizimistas</a> : null}
+              <a className="block rounded-lg px-3 py-2 text-sm hover:bg-muted" href="/visitantes">Visitantes</a>
+              {role === "admin" ? <a className="block rounded-lg px-3 py-2 text-sm hover:bg-muted" href="/dizimistas">Dizimistas</a> : null}
               <a className="block rounded-lg px-3 py-2 text-sm hover:bg-muted" href="/aniversarios">Aniversários</a>
               {role === "admin" ? <a className="block rounded-lg px-3 py-2 text-sm hover:bg-muted" href="/financeiro">Financeiro</a> : null}
               <button className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted" onClick={signOut}>Sair do sistema</button>
