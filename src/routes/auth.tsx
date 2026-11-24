@@ -91,7 +91,7 @@ function AuthPage() {
     setLoading(false);
 
     if (recoveryError) {
-      setError("Não foi possível enviar o link. Confira o e-mail e tente novamente.");
+      setError(`Falha no envio: ${recoveryError.message}`);
       return;
     }
     setNotice("Se esse e-mail estiver cadastrado, você receberá um link para redefinir sua senha.");
