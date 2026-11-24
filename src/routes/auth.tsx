@@ -123,7 +123,10 @@ function AuthPage() {
         return;
       }
 
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({\n        email: parsed.data.email,\n        password: parsed.data.password,\n      });
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: parsed.data.email,
+        password: parsed.data.password,
+      });
       if (signInError || !signInData.user) {
         const message = signInError?.message.toLowerCase() ?? "";
         setError(
