@@ -35,7 +35,7 @@ export const Route = createFileRoute("/auth")({
 });
 
 const schema = z.object({
-  email: z.string().trim().email("Informe um e-mail válido").max(255),
+  email: z.string().trim().toLowerCase().email("Informe um e-mail válido").max(255),
   password: z.string().min(1, "Informe a senha").max(128),
 });
 
@@ -123,12 +123,12 @@ function AuthPage() {
         return;
       }
 
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword(parsed.data);
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({\n        email: parsed.data.email,\n        password: parsed.data.password,\n      });
       if (signInError || !signInData.user) {
         const message = signInError?.message.toLowerCase() ?? "";
         setError(
           message.includes("invalid login credentials") || message.includes("invalid")
-            ? "E-mail ou senha não conferem. Confira os dados ou redefina sua senha."
+            ? `O Supabase recusou o acesso: ${signInError?.message ?? "credenciais inválidas"}. O e-mail foi normalizado automaticamente; confirme a senha cadastrada para este usuário no Supabase.`
             : message.includes("email not confirmed")
               ? "Este e-mail ainda não foi confirmado. Verifique sua caixa de entrada."
               : "Não foi possível autenticar. Verifique a conexão e tente novamente.",
