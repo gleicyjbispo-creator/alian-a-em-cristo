@@ -51,16 +51,29 @@ function AuthPage() {
   const [isRecovery, setIsRecovery] = useState(false);
 
   useEffect(() => {
+    // Recovery links may arrive with either an implicit-flow hash or a PKCE code.
+    // Detect the recovery URL before checking the existing session so the login
+    // redirect cannot send the user away before PASSWORD_RECOVERY is processed.
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const searchParams = new URLSearchParams(window.location.search);
+    let recoveryDetected =
+      hashParams.get("type") === "recovery" || searchParams.has("code");
+
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") setIsRecovery(true);
+      if (event === "PASSWORD_RECOVERY") {
+        recoveryDetected = true;
+        setIsRecovery(true);
+      }
     });
 
     void supabase.auth.getSession().then(({ data }) => {
-      if (data.session && !isRecovery) void navigate({ to: redirect ?? "/painel", replace: true });
+      if (data.session && !recoveryDetected) {
+        void navigate({ to: redirect ?? "/painel", replace: true });
+      }
     });
 
     return () => authListener.subscription.unsubscribe();
-  }, [navigate, redirect, isRecovery]);
+  }, [navigate, redirect]);
 
   async function onForgotPassword() {
     setError(null);
