@@ -73,7 +73,7 @@ function AuthPage() {
 
     setLoading(true);
     const { error: recoveryError } = await supabase.auth.resetPasswordForEmail(parsedEmail.data, {
-      redirectTo: `${window.location.origin}/auth`,
+      redirectTo: "https://marc-flock-and-fellowship.lovable.app/auth",
     });
     setLoading(false);
 
