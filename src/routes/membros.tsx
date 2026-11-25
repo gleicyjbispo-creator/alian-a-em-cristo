@@ -20,6 +20,7 @@ type Member = {
   joined_at: string | null;
   status: "ativo" | "inativo";
   notes: string | null;
+  cargo?: string | null;
   is_tither?: boolean;
 };
 
@@ -30,6 +31,7 @@ type FormState = {
   joined_at: string;
   status: "ativo" | "inativo";
   notes: string;
+  cargo: string;
   is_tither: boolean;
 };
 
@@ -40,6 +42,7 @@ const emptyForm: FormState = {
   joined_at: "",
   status: "ativo",
   notes: "",
+  cargo: "",
   is_tither: false,
 };
 
@@ -108,7 +111,7 @@ function MembersPage() {
     }
     setRole(userRole);
 
-    let query = supabase.from("members").select("id, full_name, phone, birth_date, joined_at, status, notes").order("full_name");
+    let query = supabase.from("members").select("*").order("full_name");
     if (statusFilter !== "todos") query = query.eq("status", statusFilter);
     const term = search.trim();
     if (term) {
@@ -117,7 +120,7 @@ function MembersPage() {
         ? query.or(`full_name.ilike.%${term}%,phone_digits.ilike.%${digits}%`)
         : query.ilike("full_name", `%${term}%`);
     }
-    const { data: rows, error: membersError } = await query;
+    const { data: rows, error: membersError } = await query.overrideTypes<Member[], { merge: false }>();
     if (membersError) {
       setError("Não foi possível carregar os membros. Verifique as políticas de acesso do Supabase.");
       setLoading(false);
@@ -170,6 +173,7 @@ function MembersPage() {
       joined_at: member.joined_at ?? "",
       status: member.status,
       notes: member.notes ?? "",
+      cargo: member.cargo ?? "",
       is_tither: Boolean(member.is_tither),
     });
     setFormOpen(true);
@@ -183,7 +187,10 @@ function MembersPage() {
     }
     setSaving(true);
     const digits = form.phone.replace(/\D/g, "");
+    const existingMember = members.find((member) => member.id === editingId);
+    const cargo = form.cargo.trim() || null;
     const payload = {
+      ...(cargo || existingMember?.cargo ? { cargo } : {}),
       full_name: form.full_name.trim(),
       phone: form.phone.trim() || null,
       phone_digits: digits || null,
@@ -260,7 +267,7 @@ function MembersPage() {
             </div>
             {error ? <div role="alert" className="mb-4 flex gap-2 rounded-lg bg-destructive-soft p-3 text-sm text-destructive"><ShieldAlert size={18} />{error}</div> : null}
             {loading ? <div className="flex justify-center py-12 text-sm text-muted-foreground"><Loader2 className="mr-2 animate-spin" /> Carregando membros...</div> : members.length ? (
-              <div className="overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm"><thead><tr className="border-b text-xs uppercase tracking-wide text-muted-foreground"><th className="pb-3 font-medium">Nome</th><th className="pb-3 font-medium">Telefone</th><th className="pb-3 font-medium">Nascimento</th><th className="pb-3 font-medium">Situação</th>{role === "admin" ? <th className="pb-3 font-medium">Dizimista</th> : null}<th className="pb-3 text-right font-medium">Ações</th></tr></thead><tbody className="divide-y">{members.map((member) => <tr key={member.id}><td className="py-3 pr-3 font-medium">{member.full_name}</td><td className="py-3 pr-3 text-muted-foreground">{member.phone || "—"}</td><td className="py-3 pr-3 text-muted-foreground">{member.birth_date ? new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(`${member.birth_date}T12:00:00Z`)) : "—"}</td><td className="py-3 pr-3"><span className={member.status === "ativo" ? "rounded-full bg-success-soft px-2.5 py-1 text-xs text-success" : "rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground"}>{member.status === "ativo" ? "Ativo" : "Inativo"}</span></td>{role === "admin" ? <td className="py-3 pr-3 text-muted-foreground">{member.is_tither ? "Sim" : "Não"}</td> : null}<td className="py-3 text-right"><div className="inline-flex gap-1"><Button variant="ghost" size="icon" aria-label={`Mensagem no WhatsApp para ${member.full_name}`} title={whatsappNumber(member.phone) ? "Preparar mensagem no WhatsApp" : "Cadastre um WhatsApp com DDD"} disabled={!whatsappNumber(member.phone)} onClick={() => { selectMessage(member, defaultTemplate); setRecipient(member); }}><MessageCircle size={16} /></Button><Button variant="ghost" size="icon" aria-label={`Editar ${member.full_name}`} onClick={() => openEdit(member)}><Pencil size={16} /></Button><Button variant="ghost" size="icon" aria-label={member.status === "ativo" ? "Inativar membro" : "Reativar membro"} onClick={() => void toggleStatus(member)}><UserX size={16} /></Button></div></td></tr>)}</tbody></table></div>
+              <div className="overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm"><thead><tr className="border-b text-xs uppercase tracking-wide text-muted-foreground"><th className="pb-3 font-medium">Nome</th><th className="pb-3 font-medium">Telefone</th><th className="pb-3 font-medium">Nascimento</th><th className="pb-3 font-medium">Situação</th>{role === "admin" ? <th className="pb-3 font-medium">Dizimista</th> : null}<th className="pb-3 text-right font-medium">Ações</th></tr></thead><tbody className="divide-y">{members.map((member) => <tr key={member.id}><td className="py-3 pr-3 font-medium">{member.full_name}{member.cargo ? <span className="mt-0.5 block text-xs text-muted-foreground">{member.cargo}</span> : null}</td><td className="py-3 pr-3 text-muted-foreground">{member.phone || "—"}</td><td className="py-3 pr-3 text-muted-foreground">{member.birth_date ? new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(`${member.birth_date}T12:00:00Z`)) : "—"}</td><td className="py-3 pr-3"><span className={member.status === "ativo" ? "rounded-full bg-success-soft px-2.5 py-1 text-xs text-success" : "rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground"}>{member.status === "ativo" ? "Ativo" : "Inativo"}</span></td>{role === "admin" ? <td className="py-3 pr-3 text-muted-foreground">{member.is_tither ? "Sim" : "Não"}</td> : null}<td className="py-3 text-right"><div className="inline-flex gap-1"><Button variant="ghost" size="icon" aria-label={`Mensagem no WhatsApp para ${member.full_name}`} title={whatsappNumber(member.phone) ? "Preparar mensagem no WhatsApp" : "Cadastre um WhatsApp com DDD"} disabled={!whatsappNumber(member.phone)} onClick={() => { selectMessage(member, defaultTemplate); setRecipient(member); }}><MessageCircle size={16} /></Button><Button variant="ghost" size="icon" aria-label={`Editar ${member.full_name}`} onClick={() => openEdit(member)}><Pencil size={16} /></Button><Button variant="ghost" size="icon" aria-label={member.status === "ativo" ? "Inativar membro" : "Reativar membro"} onClick={() => void toggleStatus(member)}><UserX size={16} /></Button></div></td></tr>)}</tbody></table></div>
             ) : <div className="py-12 text-center"><Users className="mx-auto text-muted-foreground" size={28} /><p className="mt-3 text-sm font-medium">Nenhum membro encontrado</p><p className="mt-1 text-xs text-muted-foreground">Altere a busca ou cadastre um novo membro.</p></div>}
           </CardContent>
         </Card>
@@ -296,6 +303,10 @@ function MembersPage() {
               <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-1.5"><Label htmlFor="phone">Telefone / WhatsApp</Label><Input id="phone" type="tel" maxLength={30} value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} /></div><div className="space-y-1.5"><Label htmlFor="birth_date">Data de nascimento</Label><Input id="birth_date" type="date" value={form.birth_date} onChange={(event) => setForm({ ...form, birth_date: event.target.value })} /></div></div>
               <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-1.5"><Label htmlFor="joined_at">Data de ingresso</Label><Input id="joined_at" type="date" value={form.joined_at} onChange={(event) => setForm({ ...form, joined_at: event.target.value })} /></div><div className="space-y-1.5"><Label htmlFor="status">Situação</Label><select id="status" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value as FormState["status"] })}><option value="ativo">Ativo</option><option value="inativo">Inativo</option></select></div></div>
               {role === "admin" ? <label className="flex items-center gap-2 rounded-lg border p-3 text-sm"><input type="checkbox" checked={form.is_tither} onChange={(event) => setForm({ ...form, is_tither: event.target.checked })} /> É dizimista?</label> : null}
+              <div className="space-y-1.5">
+                <Label htmlFor="member-cargo">Cargo na igreja</Label>
+                <Input id="member-cargo" maxLength={100} placeholder="Ex.: obreiro, pastora, líder de louvor" value={form.cargo} onChange={(event) => setForm({ ...form, cargo: event.target.value })} />
+              </div>
               <div className="space-y-1.5"><Label htmlFor="notes">Observações</Label><textarea id="notes" rows={3} maxLength={2000} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} /></div>
               <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end"><Button type="button" variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button><Button type="submit" disabled={saving}>{saving ? <Loader2 className="animate-spin" /> : null} Salvar cadastro</Button></div>
             </form>
