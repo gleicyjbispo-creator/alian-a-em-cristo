@@ -186,14 +186,12 @@ function MembersPage() {
       return;
     }
     setSaving(true);
-    const digits = form.phone.replace(/\D/g, "");
     const existingMember = members.find((member) => member.id === editingId);
     const cargo = form.cargo.trim() || null;
     const payload = {
       ...(cargo || existingMember?.cargo ? { cargo } : {}),
       full_name: form.full_name.trim(),
       phone: form.phone.trim() || null,
-      phone_digits: digits || null,
       birth_date: form.birth_date || null,
       joined_at: form.joined_at || null,
       status: form.status,
