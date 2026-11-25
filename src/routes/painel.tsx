@@ -330,6 +330,25 @@ function DashboardPage() {
               </Card>
             </div>
           </> : null}
+          {!loading && role ? (
+            <section aria-labelledby="pastores-presidentes" className="mt-8">
+              <Card className="border-0 shadow-card">
+                <CardHeader>
+                  <CardTitle id="pastores-presidentes" className="font-display text-xl">Pastores Presidentes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <img
+                    src="/imagens/pastores-presidentes.jpeg"
+                    alt="Pastores presidentes do Ministério Aliança Renascendo em Cristo"
+                    width={290}
+                    height={291}
+                    loading="lazy"
+                    className="h-auto w-full max-w-[290px] rounded-xl"
+                  />
+                </CardContent>
+              </Card>
+            </section>
+          ) : null}
           <p className="mt-10 text-center text-xs text-muted-foreground">Ministério Aliança Renascendo em Cristo · Sistema administrativo</p>
         </div>
       </main>
