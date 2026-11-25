@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { ChurchAgenda, type AgendaKind } from "@/components/app/church-agenda";
 import { BrandMark, BrandName } from "@/components/app/brand";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,11 +73,15 @@ export const Route = createFileRoute("/painel")({
       { name: "description", content: "Painel administrativo do Ministério Aliança Renascendo em Cristo." },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { aba?: AgendaKind } => {
+    return search.aba === "reuniao" || search.aba === "planejamento" ? { aba: search.aba } : {};
+  },
   component: DashboardPage,
 });
 
 function DashboardPage() {
   const navigate = useNavigate();
+  const { aba } = Route.useSearch();
   const [role, setRole] = useState<AppRole | null>(null);
   const [email, setEmail] = useState("");
   const [data, setData] = useState<DashboardData | null>(null);
@@ -232,6 +237,8 @@ function DashboardPage() {
             <a href="/visitantes" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/80 transition hover:bg-sidebar-accent"><UserRoundPlus size={18} /> Visitantes</a>
             {role === "admin" ? <a href="/dizimistas" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/80 transition hover:bg-sidebar-accent"><Wallet size={18} /> Dizimistas</a> : null}
             <a href="/aniversarios" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/80 transition hover:bg-sidebar-accent"><Cake size={18} /> Aniversários</a>
+            <Link to="/painel" search={{ aba: "reuniao" }} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/80 transition hover:bg-sidebar-accent"><Users size={18} /> Reuniões</Link>
+            <Link to="/painel" search={{ aba: "planejamento" }} className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/80 transition hover:bg-sidebar-accent"><CalendarDays size={18} /> Planejamento anual</Link>
             {role === "admin" ? <a href="/financeiro" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-sidebar-foreground/80 transition hover:bg-sidebar-accent"><Wallet size={18} /> Financeiro</a> : null}
           </nav>
         </div>
@@ -261,6 +268,8 @@ function DashboardPage() {
               <a className="block rounded-lg px-3 py-2 text-sm hover:bg-muted" href="/visitantes">Visitantes</a>
               {role === "admin" ? <a className="block rounded-lg px-3 py-2 text-sm hover:bg-muted" href="/dizimistas">Dizimistas</a> : null}
               <a className="block rounded-lg px-3 py-2 text-sm hover:bg-muted" href="/aniversarios">Aniversários</a>
+              <Link to="/painel" search={{ aba: "reuniao" }} onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm hover:bg-muted">Reuniões</Link>
+              <Link to="/painel" search={{ aba: "planejamento" }} onClick={() => setMenuOpen(false)} className="block rounded-lg px-3 py-2 text-sm hover:bg-muted">Planejamento anual</Link>
               {role === "admin" ? <a className="block rounded-lg px-3 py-2 text-sm hover:bg-muted" href="/financeiro">Financeiro</a> : null}
               <button className="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted" onClick={signOut}>Sair do sistema</button>
             </div> : null}
@@ -272,6 +281,8 @@ function DashboardPage() {
         </header>
 
         <div className="mx-auto max-w-7xl px-5 py-8 md:px-8">
+          {aba && !loading && role ? <ChurchAgenda key={aba} kind={aba} /> : null}
+          {!aba || loading || !role ? <>
           <div className="mb-8">
             <p className="text-sm font-medium text-primary">Ministério Aliança Renascendo em Cristo</p>
             <h1 className="mt-1 font-display text-3xl font-semibold md:text-4xl">Bem-vindo(a) ao painel</h1>
@@ -349,6 +360,7 @@ function DashboardPage() {
               </Card>
             </section>
           ) : null}
+          </> : null}
           <p className="mt-10 text-center text-xs text-muted-foreground">Ministério Aliança Renascendo em Cristo · Sistema administrativo</p>
         </div>
       </main>
