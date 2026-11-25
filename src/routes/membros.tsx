@@ -1,11 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { ArrowLeft, Loader2, Plus, Search, Pencil, UserX, Users, X, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Loader2, Plus, Search, Pencil, MessageCircle, UserX, Users, X, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { BrandMark, BrandName } from "@/components/app/brand";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,6 +43,25 @@ const emptyForm: FormState = {
   is_tither: false,
 };
 
+const messageTemplates = {
+  "Mensagem bíblica": (name: string) =>
+    `Olá, ${name}! Uma palavra para o seu dia: “O Senhor é o meu pastor; nada me faltará.” (Salmo 23:1) Que Deus fortaleça sua fé! Um abraço da equipe do MARC.`,
+  "Convite para o culto": (name: string) =>
+    `Olá, ${name}! Você e sua família são nossos convidados para o próximo culto do MARC. Vamos adorar a Deus juntos!\n\nData: \nHorário: \nLocal: `,
+  "Mensagem de oração": (name: string) =>
+    `Olá, ${name}! Como você está? Queremos orar por você. Se quiser compartilhar um pedido de oração, estamos à disposição. Deus abençoe! Um abraço da equipe do MARC.`,
+};
+
+type MessageTemplate = keyof typeof messageTemplates;
+const defaultTemplate: MessageTemplate = "Mensagem bíblica";
+
+function whatsappNumber(phone: string | null) {
+  const digits = phone?.replace(/\D/g, "") ?? "";
+  if (/^[1-9]\d{9,10}$/.test(digits)) return `55${digits}`;
+  if (/^55[1-9]\d{9,10}$/.test(digits)) return digits;
+  return null;
+}
+
 export const Route = createFileRoute("/membros")({
   head: () => ({ meta: [{ title: "Membros · MARC" }] }),
   component: MembersPage,
@@ -51,6 +71,9 @@ function MembersPage() {
   const navigate = useNavigate();
   const [role, setRole] = useState<AppRole | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
+  const [recipient, setRecipient] = useState<Member | null>(null);
+  const [messageTemplate, setMessageTemplate] = useState<MessageTemplate>(defaultTemplate);
+  const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"todos" | "ativo" | "inativo">("ativo");
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -120,6 +143,17 @@ function MembersPage() {
   useEffect(() => { void loadMembers(); }, [loadMembers]);
 
   const visibleCount = useMemo(() => members.length, [members]);
+
+  function selectMessage(member: Member, template: MessageTemplate) {
+    const firstName = member.full_name.trim().split(/\s+/)[0];
+    setMessageTemplate(template);
+    setMessage(messageTemplates[template](firstName));
+  }
+
+  const recipientNumber = recipient ? whatsappNumber(recipient.phone) : null;
+  const whatsappUrl = recipientNumber && message.trim()
+    ? `https://wa.me/${recipientNumber}?text=${encodeURIComponent(message.trim())}`
+    : null;
 
   function openNew() {
     setEditingId(null);
@@ -226,10 +260,33 @@ function MembersPage() {
             </div>
             {error ? <div role="alert" className="mb-4 flex gap-2 rounded-lg bg-destructive-soft p-3 text-sm text-destructive"><ShieldAlert size={18} />{error}</div> : null}
             {loading ? <div className="flex justify-center py-12 text-sm text-muted-foreground"><Loader2 className="mr-2 animate-spin" /> Carregando membros...</div> : members.length ? (
-              <div className="overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm"><thead><tr className="border-b text-xs uppercase tracking-wide text-muted-foreground"><th className="pb-3 font-medium">Nome</th><th className="pb-3 font-medium">Telefone</th><th className="pb-3 font-medium">Nascimento</th><th className="pb-3 font-medium">Situação</th>{role === "admin" ? <th className="pb-3 font-medium">Dizimista</th> : null}<th className="pb-3 text-right font-medium">Ações</th></tr></thead><tbody className="divide-y">{members.map((member) => <tr key={member.id}><td className="py-3 pr-3 font-medium">{member.full_name}</td><td className="py-3 pr-3 text-muted-foreground">{member.phone || "—"}</td><td className="py-3 pr-3 text-muted-foreground">{member.birth_date ? new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(`${member.birth_date}T12:00:00Z`)) : "—"}</td><td className="py-3 pr-3"><span className={member.status === "ativo" ? "rounded-full bg-success-soft px-2.5 py-1 text-xs text-success" : "rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground"}>{member.status === "ativo" ? "Ativo" : "Inativo"}</span></td>{role === "admin" ? <td className="py-3 pr-3 text-muted-foreground">{member.is_tither ? "Sim" : "Não"}</td> : null}<td className="py-3 text-right"><div className="inline-flex gap-1"><Button variant="ghost" size="icon" aria-label={`Editar ${member.full_name}`} onClick={() => openEdit(member)}><Pencil size={16} /></Button><Button variant="ghost" size="icon" aria-label={member.status === "ativo" ? "Inativar membro" : "Reativar membro"} onClick={() => void toggleStatus(member)}><UserX size={16} /></Button></div></td></tr>)}</tbody></table></div>
+              <div className="overflow-x-auto"><table className="w-full min-w-[650px] text-left text-sm"><thead><tr className="border-b text-xs uppercase tracking-wide text-muted-foreground"><th className="pb-3 font-medium">Nome</th><th className="pb-3 font-medium">Telefone</th><th className="pb-3 font-medium">Nascimento</th><th className="pb-3 font-medium">Situação</th>{role === "admin" ? <th className="pb-3 font-medium">Dizimista</th> : null}<th className="pb-3 text-right font-medium">Ações</th></tr></thead><tbody className="divide-y">{members.map((member) => <tr key={member.id}><td className="py-3 pr-3 font-medium">{member.full_name}</td><td className="py-3 pr-3 text-muted-foreground">{member.phone || "—"}</td><td className="py-3 pr-3 text-muted-foreground">{member.birth_date ? new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(new Date(`${member.birth_date}T12:00:00Z`)) : "—"}</td><td className="py-3 pr-3"><span className={member.status === "ativo" ? "rounded-full bg-success-soft px-2.5 py-1 text-xs text-success" : "rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground"}>{member.status === "ativo" ? "Ativo" : "Inativo"}</span></td>{role === "admin" ? <td className="py-3 pr-3 text-muted-foreground">{member.is_tither ? "Sim" : "Não"}</td> : null}<td className="py-3 text-right"><div className="inline-flex gap-1"><Button variant="ghost" size="icon" aria-label={`Mensagem no WhatsApp para ${member.full_name}`} title={whatsappNumber(member.phone) ? "Preparar mensagem no WhatsApp" : "Cadastre um WhatsApp com DDD"} disabled={!whatsappNumber(member.phone)} onClick={() => { selectMessage(member, defaultTemplate); setRecipient(member); }}><MessageCircle size={16} /></Button><Button variant="ghost" size="icon" aria-label={`Editar ${member.full_name}`} onClick={() => openEdit(member)}><Pencil size={16} /></Button><Button variant="ghost" size="icon" aria-label={member.status === "ativo" ? "Inativar membro" : "Reativar membro"} onClick={() => void toggleStatus(member)}><UserX size={16} /></Button></div></td></tr>)}</tbody></table></div>
             ) : <div className="py-12 text-center"><Users className="mx-auto text-muted-foreground" size={28} /><p className="mt-3 text-sm font-medium">Nenhum membro encontrado</p><p className="mt-1 text-xs text-muted-foreground">Altere a busca ou cadastre um novo membro.</p></div>}
           </CardContent>
         </Card>
+
+        <Dialog open={recipient !== null} onOpenChange={(open) => { if (!open) setRecipient(null); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Mensagem no WhatsApp</DialogTitle>
+              <DialogDescription>{recipient?.full_name} · {recipient?.phone}</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="member-message-template">Modelo</Label>
+                <select id="member-message-template" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={messageTemplate} onChange={(event) => { if (recipient) selectMessage(recipient, event.target.value as MessageTemplate); }}>
+                  {Object.keys(messageTemplates).map((template) => <option key={template}>{template}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="member-message-text">Mensagem</Label>
+                <textarea id="member-message-text" rows={7} maxLength={2000} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={message} onChange={(event) => setMessage(event.target.value)} />
+              </div>
+              <p className="text-sm text-muted-foreground">Revise a mensagem e confirme o envio no WhatsApp.</p>
+              {whatsappUrl ? <Button asChild variant="whatsapp"><a href={whatsappUrl} target="_blank" rel="noreferrer"><MessageCircle /> Abrir WhatsApp</a></Button> : <Button variant="whatsapp" disabled><MessageCircle /> Abrir WhatsApp</Button>}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {formOpen ? <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setFormOpen(false); }}>
           <section role="dialog" aria-modal="true" aria-labelledby="member-form-title" className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-2xl bg-card p-5 shadow-raised sm:rounded-2xl sm:p-7">
